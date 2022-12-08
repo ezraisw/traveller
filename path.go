@@ -1,0 +1,81 @@
+package traveller
+
+import (
+	"errors"
+	"strings"
+)
+
+var (
+	ErrInvalidPath = errors.New("invalid path")
+)
+
+// Convert a string path to a series of matchers.
+//
+// Will panic if the path is invalid.
+func MustPath(ps string, caseInsensitive bool) []Matcher {
+	mp, err := Path(ps, caseInsensitive)
+	if err != nil {
+		panic(err)
+	}
+	return mp
+}
+
+// Convert a string path to a series of matchers.
+func Path(ps string, caseInsensitive bool) ([]Matcher, error) {
+	tokens := splitEscape(ps, '.', '\\')
+	matchers := make([]Matcher, 0, len(tokens))
+	for _, token := range tokens {
+		if isExactToken(token) {
+			if !caseInsensitive {
+				matchers = append(matchers, MatchExact{Value: token})
+			} else {
+				matchers = append(matchers, MatchPattern{
+					Pattern: token,
+					Options: MatchPatternOptions{CaseInsensitive: caseInsensitive},
+				})
+			}
+		} else if isMultiMatchToken(token) {
+			matchers = append(matchers, MatchMulti{})
+		} else if !isInvalidToken(token) {
+			matchers = append(matchers, MatchPattern{
+				Pattern: token,
+				Options: MatchPatternOptions{CaseInsensitive: caseInsensitive},
+			})
+		} else {
+			return nil, ErrInvalidPath
+		}
+	}
+	return matchers, nil
+}
+
+func isExactToken(token string) bool {
+	return !strings.Contains(token, "*")
+}
+
+func isMultiMatchToken(token string) bool {
+	return token == "**"
+}
+
+func isInvalidToken(token string) bool {
+	return strings.Contains(token, "**") && len(token) != 2
+}
+
+func splitEscape(s string, separator, escape byte) []string {
+	var (
+		token  []byte
+		tokens []string
+	)
+	for i := 0; i < len(s); i++ {
+		if s[i] == separator {
+			tokens = append(tokens, string(token))
+			token = token[:0]
+		} else if s[i] == escape && i+1 < len(s) {
+			i++
+			token = append(token, s[i])
+		} else {
+			token = append(token, s[i])
+		}
+	}
+	tokens = append(tokens, string(token))
+	return tokens
+}
