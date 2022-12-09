@@ -106,7 +106,7 @@ changeCount := traveller.SetAll(val, traveller.MustPath("**.password"), "<hidden
 
 ```go
 changeCount := traveller.SetAllBy(val, traveller.MustPath("**.password"), func(oldVal any) {
-    return MyHash(oldVal.(string))
+	return MyHash(oldVal.(string))
 })
 ```
 
@@ -121,7 +121,7 @@ hasChanged := traveller.Set(val, traveller.MustPath("**.password"), "<hidden>")
 
 ```go
 hasChanged := traveller.SetBy(val, traveller.MustPath("**.password"), func(oldVal string) {
-    return MyHash(oldVal)
+	return MyHash(oldVal)
 })
 ```
 
@@ -164,7 +164,9 @@ traveller.GetAll[string](val, traveller.MustPath("something.**.some*"),
 
 - `WithNoFlatEmbeds`: If true, disallows "flattening" of embedded values. Like the following:
 ```go
-type Outer struct { // Cannot get by "Value" on this struct because NoFlatEmbeds is set. Only "Inner.Value" is allowed.
+// Cannot get by "Value" on this struct because NoFlatEmbeds is set.
+// Only "Inner.Value" is allowed.
+type Outer struct {
 	Inner
 }
 

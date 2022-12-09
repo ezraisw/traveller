@@ -337,15 +337,51 @@ func (s GeneralTestSuite) TestCallGetAll() {
 		},
 		getAllSubTestCase[bulb, int]{
 			in:       makeBulb(),
-			mp:       []traveller.Matcher{traveller.MatchMulti{}},
+			mp:       []traveller.Matcher{traveller.MatchExact{Value: "Sunshine"}},
+			expected: []int{},
+			options:  []traveller.TravellerOption{traveller.WithIgnoreStruct(true)},
+		},
+		getAllSubTestCase[bulb, int]{
+			in:       makeBulb(),
+			mp:       []traveller.Matcher{traveller.MatchPattern{Pattern: "*unsh*"}},
 			expected: []int{},
 			options:  []traveller.TravellerOption{traveller.WithIgnoreStruct(true)},
 		},
 		getAllSubTestCase[bulb, int]{
 			in:       makeBulb(),
 			mp:       []traveller.Matcher{traveller.MatchMulti{}},
+			expected: []int{},
+			options:  []traveller.TravellerOption{traveller.WithIgnoreStruct(true)},
+		},
+		getAllSubTestCase[bulb, int]{
+			in:       makeBulb(),
+			mp:       []traveller.Matcher{traveller.MatchExact{Value: "Cup"}, traveller.MatchExact{Value: "Blasphemy"}},
+			expected: []int{},
+			options:  []traveller.TravellerOption{traveller.WithIgnoreMap(true)},
+		},
+		getAllSubTestCase[bulb, int]{
+			in:       makeBulb(),
+			mp:       []traveller.Matcher{traveller.MatchMulti{}, traveller.MatchPattern{Pattern: "*c*"}},
+			expected: []int{696969, 999999, 871, 1, 9876},
+			options:  []traveller.TravellerOption{traveller.WithIgnoreMap(true)},
+		},
+		getAllSubTestCase[bulb, int]{
+			in:       makeBulb(),
+			mp:       []traveller.Matcher{traveller.MatchMulti{}},
 			expected: []int{121, 1021, 2930, 3718, 2848, 1366, 517, 440, 168, 357, 871, 455, 871, 515, 133, 254, 750, 614, 868, 744, 684, 151, 243, 507, 1, 740, 555, 874, 864, 582, 807, 802, 822, 696969, 449, 686, 727, 715, 81, 896, 999999, 9876},
 			options:  []traveller.TravellerOption{traveller.WithIgnoreMap(true)},
+		},
+		getAllSubTestCase[bulb, string]{
+			in:       makeBulb(),
+			mp:       []traveller.Matcher{traveller.MatchExact{Value: "Brother"}, traveller.MatchExact{Value: 0}},
+			expected: []string{},
+			options:  []traveller.TravellerOption{traveller.WithIgnoreArray(true)},
+		},
+		getAllSubTestCase[bulb, string]{
+			in:       makeBulb(),
+			mp:       []traveller.Matcher{traveller.MatchExact{Value: "Headache"}, traveller.MatchPattern{Pattern: "*"}},
+			expected: []string{},
+			options:  []traveller.TravellerOption{traveller.WithIgnoreArray(true)},
 		},
 		getAllSubTestCase[bulb, int]{
 			in:       makeBulb(),
@@ -380,6 +416,11 @@ func (s GeneralTestSuite) TestCallGet() {
 			in:       makeBulb(),
 			mp:       []traveller.Matcher{},
 			expected: makeBulb(),
+		},
+		getSubTestCase[bulb, int]{
+			in:       makeBulb(),
+			mp:       []traveller.Matcher{traveller.MatchExact{Value: "Sunshine"}, traveller.MatchExact{Value: "Inner"}},
+			notFound: true,
 		},
 		getSubTestCase[bulb, int]{
 			in:       makeBulb(),
@@ -448,11 +489,11 @@ func (s GeneralTestSuite) TestCallSetAllBy() {
 		setAllBySubTestCase[bulb, string]{
 			in: makeBulb(),
 			mp: []traveller.Matcher{traveller.MatchMulti{}},
-			setter: func(oldVal string) (newVal any, shouldSet bool) {
+			setter: func(oldVal string) (any, bool, bool) {
 				if oldVal == "YOSiMHf7S9FCwCvlbnyr" {
-					return nil, false
+					return nil, true, false
 				}
-				return oldVal + editStr, true
+				return oldVal + editStr, true, true
 			},
 			expectedFn: func() bulb {
 				x := makeBulb()
@@ -501,11 +542,24 @@ func (s GeneralTestSuite) TestCallSetAllBy() {
 			},
 			count: 49,
 		},
+		setAllBySubTestCase[bulb, string]{
+			in: makeBulb(),
+			mp: []traveller.Matcher{traveller.MatchMulti{}},
+			setter: func(string) (any, bool, bool) {
+				return "this has been edited", false, true
+			},
+			expectedFn: func() bulb {
+				x := makeBulb()
+				x.Brother[0] = "this has been edited"
+				return x
+			},
+			count: 1,
+		},
 		setAllBySubTestCase[bulb, any]{
 			in: makeBulb(),
 			mp: []traveller.Matcher{traveller.MatchExact{Value: "<Nonexistant>"}},
-			setter: func(any) (any, bool) {
-				return "this has been edited", true
+			setter: func(any) (any, bool, bool) {
+				return "this has been edited", true, true
 			},
 			expectedFn: func() bulb { return makeBulb() },
 			count:      0,
@@ -537,8 +591,8 @@ func (s GeneralTestSuite) TestCallSetBy() {
 		setBySubTestCase[bulb, string]{
 			in: makeBulb(),
 			mp: []traveller.Matcher{traveller.MatchExact{Value: "Cup"}, traveller.MatchExact{Value: "Houseplant"}, traveller.MatchExact{Value: "Machinery"}},
-			setter: func(string) (any, bool) {
-				return "this has been edited", true
+			setter: func(string) (any, bool, bool) {
+				return "this has been edited", true, true
 			},
 			expectedFn: func() bulb {
 				x := makeBulb()
@@ -550,8 +604,8 @@ func (s GeneralTestSuite) TestCallSetBy() {
 		setBySubTestCase[bulb, any]{
 			in: makeBulb(),
 			mp: []traveller.Matcher{traveller.MatchExact{Value: "<Nonexistant>"}},
-			setter: func(any) (any, bool) {
-				return "this has been edited", true
+			setter: func(any) (any, bool, bool) {
+				return "this has been edited", true, true
 			},
 			expectedFn: func() bulb { return makeBulb() },
 			changed:    false,
@@ -559,8 +613,8 @@ func (s GeneralTestSuite) TestCallSetBy() {
 		setBySubTestCase[bulb, any]{
 			in: makeBulb(),
 			mp: []traveller.Matcher{traveller.MatchExact{Value: "Federation"}, traveller.MatchExact{Value: "Hate"}, traveller.MatchExact{Value: "Create"}, traveller.MatchExact{Value: "Fence"}, traveller.MatchExact{Value: "Contradiction"}},
-			setter: func(any) (any, bool) {
-				return map[string]any{}, true
+			setter: func(any) (any, bool, bool) {
+				return map[string]any{}, true, true
 			},
 			expectedFn: func() bulb {
 				x := makeBulb()
@@ -572,11 +626,11 @@ func (s GeneralTestSuite) TestCallSetBy() {
 		setBySubTestCase[bulb, string]{
 			in: makeBulb(),
 			mp: []traveller.Matcher{traveller.MatchMulti{}},
-			setter: func(oldVal string) (any, bool) {
+			setter: func(oldVal string) (any, bool, bool) {
 				if oldVal == "HFLMPL2rQcwFzlx8dw7D" {
-					return nil, false
+					return nil, true, false
 				}
-				return "this has been edited", true
+				return "this has been edited", true, true
 			},
 			expectedFn: func() bulb {
 				x := makeBulb()

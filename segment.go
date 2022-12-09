@@ -2,6 +2,7 @@ package traveller
 
 import "reflect"
 
+// Represents a path segment for matching.
 type MatcherSegment struct {
 	traveller *Traveller
 	index     int

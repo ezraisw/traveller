@@ -8,14 +8,25 @@ import (
 )
 
 type Matcher interface {
-	// Return true to continue traversing.
+	// Match the given reflect.Value. Return true to continue traversing.
+	//
+	// Call MatcherSegment.Next to continue traversal using the next path segment or
+	// MatcherSegment.Stay to keep using the current path segment for a new value.
 	Match(reflect.Value, MatcherSegment) (keepSearching bool)
 }
 
+// Exact match by value.
 type MatchExact struct {
 	// The value to match with.
+	//
+	// To match a field name of a struct, use a string.
+	// To match an index of an array/slice, use an int.
+	// To match a map key, use the correct key type of that map.
 	Value any
 }
+
+// Compile-time implementation check.
+var _ Matcher = (*MatchExact)(nil)
 
 func (m MatchExact) Match(rv reflect.Value, s MatcherSegment) bool {
 	switch rv := Unbox(rv); rv.Kind() {
@@ -78,6 +89,7 @@ func (m MatchExact) matchArray(rv reflect.Value, s MatcherSegment) bool {
 	return true
 }
 
+// Match by a wildcard string pattern.
 type MatchPattern struct {
 	// The string pattern to use. Uses wildcard pattern.
 	Pattern string
@@ -89,12 +101,15 @@ type MatchPattern struct {
 type MatchPatternOptions struct {
 	// Only try to match keys that are a type of string.
 	// If false, attempt to convert non string keys into a string.
-	OnlyStringMapKey bool
+	OnlyStringKey bool
 
 	// Disregard letter cases.
 	// If true, strings like "JoHn" and "john" will be the same.
 	CaseInsensitive bool
 }
+
+// Compile-time implementation check.
+var _ Matcher = (*MatchPattern)(nil)
 
 func (m MatchPattern) Match(rv reflect.Value, s MatcherSegment) bool {
 	switch rv := Unbox(rv); rv.Kind() {
@@ -143,7 +158,7 @@ func (m MatchPattern) matchMap(rv reflect.Value, s MatcherSegment) bool {
 			keyStr string
 			ok     bool
 		)
-		if m.Options.OnlyStringMapKey {
+		if m.Options.OnlyStringKey {
 			if keyRv.Kind() == reflect.String {
 				keyStr, ok = keyRv.String(), true
 			}
@@ -166,6 +181,10 @@ func (m MatchPattern) matchArray(rv reflect.Value, s MatcherSegment) bool {
 		return true
 	}
 	for i := 0; i < rv.Len(); i++ {
+		// Array indexes are ints, therefore it is inevitable when OnlyStringKey is active.
+		if m.Options.OnlyStringKey {
+			continue
+		}
 		// Force index as string.
 		if !wild.Match(m.Pattern, strconv.Itoa(i), m.Options.CaseInsensitive) {
 			continue
@@ -177,8 +196,12 @@ func (m MatchPattern) matchArray(rv reflect.Value, s MatcherSegment) bool {
 	return true
 }
 
+// Recursive free matcher.
 type MatchMulti struct {
 }
+
+// Compile-time implementation check.
+var _ Matcher = (*MatchMulti)(nil)
 
 func (m MatchMulti) Match(rv reflect.Value, s MatcherSegment) bool {
 	switch rv := Unbox(rv); rv.Kind() {

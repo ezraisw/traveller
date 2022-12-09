@@ -5,26 +5,32 @@ import (
 )
 
 const (
-	PanicMsgNoMatch           = "traveller: no match"
-	PanicMsgNotAPointerForSet = "traveller: not a pointer, cannot set without pointer value"
+	panicMsgNoMatch           = "traveller: no match"
+	panicMsgNotAPointerForSet = "traveller: not a pointer, cannot set without pointer value"
 )
 
 // The callback for setting value.
+// The type returned could be anything, as long as it
+// is assignable to the field in context.
 //
-// Return the shouldSet as false to not set.
-type SetterFunc[T any] func(oldVal T) (newVal any, shouldSet bool)
+// Return `keepSearching` as false to stop traversing.
+// Return `shouldSet` as false to not set the current matched value.
+type SetterFunc[T any] func(oldVal T) (newVal any, keepSearching, shouldSet bool)
 
 // Get first value of type T, matching path.
+//
+// Will panic if there is no match.
 func MustGet[T any](i any, mp []Matcher, options ...TravellerOption) T {
 	val, ok := Get[T](i, mp)
 	if !ok {
-		panic(PanicMsgNoMatch)
+		panic(panicMsgNoMatch)
 	}
 	return val
 }
 
 // Get first value of type T, matching path.
-// The second value will be false if nothing is found.
+//
+// The second value will be false if there is no match of path and type.
 func Get[T any](i any, mp []Matcher, options ...TravellerOption) (T, bool) {
 	var (
 		val T
@@ -55,14 +61,28 @@ func GetAll[T any](i any, mp []Matcher, options ...TravellerOption) []T {
 	return vals
 }
 
+// Set a single value matching the path using the given value.
+// It will only assign once. If unsuccessful in setting the value
+// on a matching field, it will continue to the next matching field.
+//
+// `in` must be a pointer to a value or it will panic.
 func Set(in any, mp []Matcher, val any, options ...TravellerOption) bool {
-	return SetBy(in, mp, func(any) (any, bool) { return val, true }, options...)
+	return SetBy(in, mp, func(any) (any, bool, bool) { return val, true, true }, options...)
 }
 
+// Set a single value using a function matching the path and type.
+//
+// Return true as the second return value for the `setter` to continue
+// searching.
+// Return true as the third return value for the `setter` to attempt
+// a value assignment and cause the traversal to stop if
+// the value is successfully set.
+//
+// `in` must be a pointer to a value or it will panic.
 func SetBy[T any](in any, mp []Matcher, setter SetterFunc[T], options ...TravellerOption) bool {
 	inRv := reflect.ValueOf(in)
 	if inRv.Kind() != reflect.Ptr {
-		panic(PanicMsgNotAPointerForSet)
+		panic(panicMsgNotAPointerForSet)
 	}
 	inRv = inRv.Elem()
 
@@ -75,9 +95,9 @@ func SetBy[T any](in any, mp []Matcher, setter SetterFunc[T], options ...Travell
 				return true // Keep searching.
 			}
 
-			newVal, shouldSet := setter(oldVal)
+			newVal, keepSearching, shouldSet := setter(oldVal)
 			if !shouldSet {
-				return true // Keep searching.
+				return keepSearching // Keep searching.
 			}
 
 			newRv := reflect.ValueOf(newVal)
@@ -88,7 +108,7 @@ func SetBy[T any](in any, mp []Matcher, setter SetterFunc[T], options ...Travell
 				changed = true
 			}
 
-			return !changed
+			return keepSearching && !changed
 		},
 	}
 
@@ -96,14 +116,26 @@ func SetBy[T any](in any, mp []Matcher, setter SetterFunc[T], options ...Travell
 	return changed
 }
 
+// Set all fields matching the path using the given value.
+// Will only assign the value if it is assignable to the matching field.
+//
+// `in` must be a pointer to a value or it will panic.
 func SetAll(in any, mp []Matcher, val any, options ...TravellerOption) int {
-	return SetAllBy(in, mp, func(any) (any, bool) { return val, true }, options...)
+	return SetAllBy(in, mp, func(any) (any, bool, bool) { return val, true, true }, options...)
 }
 
+// Set all values using a function matching the path and type.
+//
+// Return true as the second return value for the `setter` to
+// continue searching.
+// Return true as the third return value for the `setter` to set
+// the desired value.
+//
+// `in` must be a pointer to a value or it will panic.
 func SetAllBy[T any](in any, mp []Matcher, setter SetterFunc[T], options ...TravellerOption) int {
 	inRv := reflect.ValueOf(in)
 	if inRv.Kind() != reflect.Ptr {
-		panic(PanicMsgNotAPointerForSet)
+		panic(panicMsgNotAPointerForSet)
 	}
 	inRv = inRv.Elem()
 
@@ -116,9 +148,9 @@ func SetAllBy[T any](in any, mp []Matcher, setter SetterFunc[T], options ...Trav
 				return true // Keep searching.
 			}
 
-			newVal, shouldSet := setter(oldVal)
+			newVal, keepSearching, shouldSet := setter(oldVal)
 			if !shouldSet {
-				return true // Keep searching.
+				return keepSearching
 			}
 
 			newRv := reflect.ValueOf(newVal)
@@ -129,7 +161,7 @@ func SetAllBy[T any](in any, mp []Matcher, setter SetterFunc[T], options ...Trav
 				count++
 			}
 
-			return true // Keep searching.
+			return keepSearching
 		},
 	}
 
@@ -144,7 +176,8 @@ func appendOnTypeMatch[T any](slice []T, rv reflect.Value) []T {
 	return slice
 }
 
-// Whether the given value is a mutable but inaddressable type contained in an interface.
+// Whether it is a mutable type but is stack allocated by default.
+// This characteristic is applied to arrays and structs.
 func stackMutable(kind reflect.Kind) bool {
 	return kind == reflect.Struct || kind == reflect.Array
 }
@@ -154,6 +187,7 @@ func mutableInaddr(rv reflect.Value) bool {
 	return rv.Kind() == reflect.Interface && stackMutable(rv.Elem().Kind())
 }
 
+// The handler for handling nested inaddressable values.
 func handleInaddrVals(t Traversal) bool {
 	if t.RV().CanAddr() && !mutableInaddr(t.RV()) {
 		return t.Next(t.RV())

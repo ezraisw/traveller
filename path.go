@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	// The error that is returned when there is an invalid path.
 	ErrInvalidPath = errors.New("invalid path")
 )
 
@@ -48,18 +49,25 @@ func Path(ps string, caseInsensitive bool) ([]Matcher, error) {
 	return matchers, nil
 }
 
+// Whether the token is an exact match value.
 func isExactToken(token string) bool {
 	return !strings.Contains(token, "*")
 }
 
+// Whether the token is a multi match/recursive match value.
 func isMultiMatchToken(token string) bool {
 	return token == "**"
 }
 
+// Whether a token is invalid and should not be parsed.
 func isInvalidToken(token string) bool {
 	return strings.Contains(token, "**") && len(token) != 2
 }
 
+// Splits a string to a collection of token by the given separator.
+//
+// Will not attempt to split when a separator is preceded by
+// the specified escape character.
 func splitEscape(s string, separator, escape byte) []string {
 	var (
 		token  []byte

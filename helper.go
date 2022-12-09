@@ -6,7 +6,8 @@ import (
 	"strconv"
 )
 
-// This is similar to reflect.Indirect, but also unboxes interface types.
+// This is similar to reflect.Indirect, but unboxes the interface type
+// first before exposing the actual type behind the pointer.
 func Unbox(rv reflect.Value) reflect.Value {
 	if rv.Kind() == reflect.Interface {
 		rv = rv.Elem()
