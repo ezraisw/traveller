@@ -564,6 +564,30 @@ func (s GeneralTestSuite) TestCallSetAllBy() {
 			expectedFn: func() bulb { return makeBulb() },
 			count:      0,
 		},
+		setAllBySubTestCase[bulb, any]{
+			in: makeBulb(),
+			mp: []traveller.Matcher{traveller.MatchExact{Value: "Federation"}, traveller.MatchExact{Value: "Hate"}, traveller.MatchExact{Value: "Create"}, traveller.MatchExact{Value: "Fence"}, traveller.MatchExact{Value: "Knowledge"}, traveller.MatchExact{Value: "Job"}, traveller.MatchPattern{Pattern: "*"}},
+			setter: func(any) (any, bool, bool) {
+				return swipe{
+					Plain:   "plain plain",
+					Meaning: "meaning meaning",
+					Peace:   25,
+				}, true, true
+			},
+			expectedFn: func() bulb {
+				x := makeBulb()
+				sl := x.Federation.Hate.Create.Fence.Knowledge.Job.([]any)
+				for i := range sl {
+					sl[i] = swipe{
+						Plain:   "plain plain",
+						Meaning: "meaning meaning",
+						Peace:   25,
+					}
+				}
+				return x
+			},
+			count: 5,
+		},
 	}
 
 	for i, c := range cases {

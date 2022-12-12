@@ -204,7 +204,7 @@ func handleInaddrVals(t Traversal) bool {
 	// This is a workaround to enable edits of non pointer struct and array behind an interface.
 	// Ideally, traversal of these values should be passed though Unbox first.
 	var hackRv reflect.Value
-	if mutableInaddr(t.RV()) {
+	if mutableInaddr(t.RV()) && t.Index() != t.Traveller().PathLen() {
 		// Pointer of the value inside the interface.
 		hackRv = reflect.New(t.RV().Elem().Type())
 		hackRv.Elem().Set(t.RV().Elem())
@@ -217,7 +217,7 @@ func handleInaddrVals(t Traversal) bool {
 	keepSearching := t.Next(newRv)
 
 	// Restore the hack so that the types are the same.
-	// Only when mutableInaddr is true.
+	// Only when mutableInaddr() returns true and is not the found value.
 	if hackRv.IsValid() {
 		newRv.Set(hackRv.Elem())
 	}
