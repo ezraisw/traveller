@@ -1,5 +1,6 @@
 package traveller
 
+// Represents an optional setting for Traveller.
 type TravellerOption func(*Traveller)
 
 // Prevents flattening of embedded types into the matcher.

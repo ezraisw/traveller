@@ -10,9 +10,26 @@ var (
 	ErrInvalidPath = errors.New("invalid path")
 )
 
+// Shorthand for MustPath(ps, false).
+//
+// Will panic if the given path string is invalid.
+// Use Path if an invalid input is expected.
+func P(ps string) []Matcher {
+	return MustPath(ps, false)
+}
+
+// Shorthand for MustPath(ps, true).
+//
+// Will panic if the given path string is invalid.
+// Use Path if an invalid input is expected.
+func PCI(ps string) []Matcher {
+	return MustPath(ps, true)
+}
+
 // Convert a string path to a series of matchers.
 //
-// Will panic if the path is invalid.
+// Will panic if the given path string is invalid.
+// Use Path if an invalid input is expected.
 func MustPath(ps string, caseInsensitive bool) []Matcher {
 	mp, err := Path(ps, caseInsensitive)
 	if err != nil {

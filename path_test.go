@@ -23,6 +23,28 @@ func TestRunPathTestSuite(t *testing.T) {
 	suite.Run(t, new(PathTestSuite))
 }
 
+func (s PathTestSuite) TestCallP() {
+	expectedMp := []traveller.Matcher{
+		traveller.MatchExact{Value: "something"},
+		traveller.MatchMulti{},
+		traveller.MatchExact{Value: "something"},
+		traveller.MatchPattern{Pattern: "so*th*ing"},
+	}
+	mp := traveller.P("something.**.something.so*th*ing")
+	s.Equal(expectedMp, mp)
+}
+
+func (s PathTestSuite) TestCallPCI() {
+	expectedMp := []traveller.Matcher{
+		traveller.MatchPattern{Pattern: "something", Options: traveller.MatchPatternOptions{CaseInsensitive: true}},
+		traveller.MatchMulti{},
+		traveller.MatchPattern{Pattern: "something", Options: traveller.MatchPatternOptions{CaseInsensitive: true}},
+		traveller.MatchPattern{Pattern: "so*th*ing", Options: traveller.MatchPatternOptions{CaseInsensitive: true}},
+	}
+	mp := traveller.PCI("something.**.something.so*th*ing")
+	s.Equal(expectedMp, mp)
+}
+
 func (s PathTestSuite) TestCallMustPathPanic() {
 	s.Panics(func() {
 		traveller.MustPath("***", true)
@@ -30,13 +52,14 @@ func (s PathTestSuite) TestCallMustPathPanic() {
 }
 
 func (s PathTestSuite) TestCallMustPath() {
-	mp := traveller.MustPath("something.**.something.so*th*ing", false)
-	s.Equal([]traveller.Matcher{
+	expectedMp := []traveller.Matcher{
 		traveller.MatchExact{Value: "something"},
 		traveller.MatchMulti{},
 		traveller.MatchExact{Value: "something"},
 		traveller.MatchPattern{Pattern: "so*th*ing"},
-	}, mp)
+	}
+	mp := traveller.MustPath("something.**.something.so*th*ing", false)
+	s.Equal(expectedMp, mp)
 }
 
 func (s PathTestSuite) TestCallPath() {

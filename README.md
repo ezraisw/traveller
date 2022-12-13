@@ -63,7 +63,7 @@ func main() {
 		},
 	}
 
-	allStrings := traveller.GetAll[string](x, traveller.MustPath("**", false))
+	allStrings := traveller.GetAll[string](x, traveller.P("**"))
 	fmt.Println(allStrings) // [Something Juice Night Hidden Claws Indeed Batman Cake Sleep]
 }
 
@@ -75,7 +75,7 @@ func main() {
 `traveller.GetAll[T]` will retrieve all value matching the given path and type.
 
 ```go
-allPasswords := traveller.GetAll[string](val, traveller.MustPath("**.password", false))
+allPasswords := traveller.GetAll[string](val, traveller.P("**.password"))
 ```
 
 ### Single Value
@@ -84,13 +84,13 @@ allPasswords := traveller.GetAll[string](val, traveller.MustPath("**.password", 
 
 
 ```go
-password, ok := traveller.Get[string](val, traveller.MustPath("**.password", false))
+password, ok := traveller.Get[string](val, traveller.P("**.password"))
 ```
 
 `traveller.MustGet[T]` can also be used to obtain the desired value, but will panic if the value is not found.
 
 ```go
-password := traveller.MustGet[string](val, traveller.MustPath("**.password", false))
+password := traveller.MustGet[string](val, traveller.P("**.password"))
 ```
 
 ## Setting
@@ -101,11 +101,11 @@ password := traveller.MustGet[string](val, traveller.MustPath("**.password", fal
 If the type is unassignable to that type, then the attempt will be ignored.
 
 ```go
-changeCount := traveller.SetAll(val, traveller.MustPath("**.password", false), "<hidden>")
+changeCount := traveller.SetAll(val, traveller.P("**.password"), "<hidden>")
 ```
 
 ```go
-changeCount := traveller.SetAllBy(val, traveller.MustPath("**.password", false), func(oldVal any) {
+changeCount := traveller.SetAllBy(val, traveller.P("**.password"), func(oldVal any) {
 	return MyHash(oldVal.(string))
 })
 ```
@@ -116,11 +116,11 @@ changeCount := traveller.SetAllBy(val, traveller.MustPath("**.password", false),
 If the assignment was unsuccessful, it will continue searching.
 
 ```go
-hasChanged := traveller.Set(val, traveller.MustPath("**.password", false), "<hidden>")
+hasChanged := traveller.Set(val, traveller.P("**.password"), "<hidden>")
 ```
 
 ```go
-hasChanged := traveller.SetBy(val, traveller.MustPath("**.password", false), func(oldVal string) {
+hasChanged := traveller.SetBy(val, traveller.P("**.password"), func(oldVal string) {
 	return MyHash(oldVal)
 })
 ```
@@ -145,7 +145,7 @@ The included matchers are:
 - `MatchPattern`: Match by wildcard pattern. Matching provided by [github.com/gertd/wild](github.com/gertd/wild).
 - `MatchMulti`: Recursive matching. Allows free deep traversal.
 
-`Path` and `MustPath` return a `[]traveller.Matcher` and it is the direct type to be used. You can also make your own `[]traveller.Matcher`.
+`Path` and `MustPath` (along with its shorthand `P` and `PCI`) return a `[]traveller.Matcher` and it is the direct type to be used. You can also make your own `[]traveller.Matcher`.
 
 ```go
 traveller.GetAll[string](val, []traveller.Matcher{traveller.MatchExact{Value: "something"}, traveller.MatchMulti{}})
@@ -155,7 +155,7 @@ traveller.GetAll[string](val, []traveller.Matcher{traveller.MatchExact{Value: "s
 There are several options that allows manipulation of the traversal behaviour.
 
 ```go
-traveller.GetAll[string](val, traveller.MustPath("something.**.some*", false),
+traveller.GetAll[string](val, traveller.P("something.**.some*"),
 	traveller.WithIgnoreMaps(true),
 	traveller.WithNoFlatEmbeds(true),
 	// ...
