@@ -75,7 +75,7 @@ func main() {
 `traveller.GetAll[T]` will retrieve all value matching the given path and type.
 
 ```go
-allPasswords := traveller.GetAll[string](val, traveller.MustPath("**.password"))
+allPasswords := traveller.GetAll[string](val, traveller.MustPath("**.password", false))
 ```
 
 ### Single Value
@@ -84,13 +84,13 @@ allPasswords := traveller.GetAll[string](val, traveller.MustPath("**.password"))
 
 
 ```go
-password, ok := traveller.Get[string](val, traveller.MustPath("**.password"))
+password, ok := traveller.Get[string](val, traveller.MustPath("**.password", false))
 ```
 
 `traveller.MustGet[T]` can also be used to obtain the desired value, but will panic if the value is not found.
 
 ```go
-password := traveller.MustGet[string](val, traveller.MustPath("**.password"))
+password := traveller.MustGet[string](val, traveller.MustPath("**.password", false))
 ```
 
 ## Setting
@@ -101,11 +101,11 @@ password := traveller.MustGet[string](val, traveller.MustPath("**.password"))
 If the type is unassignable to that type, then the attempt will be ignored.
 
 ```go
-changeCount := traveller.SetAll(val, traveller.MustPath("**.password"), "<hidden>")
+changeCount := traveller.SetAll(val, traveller.MustPath("**.password", false), "<hidden>")
 ```
 
 ```go
-changeCount := traveller.SetAllBy(val, traveller.MustPath("**.password"), func(oldVal any) {
+changeCount := traveller.SetAllBy(val, traveller.MustPath("**.password", false), func(oldVal any) {
 	return MyHash(oldVal.(string))
 })
 ```
@@ -116,11 +116,11 @@ changeCount := traveller.SetAllBy(val, traveller.MustPath("**.password"), func(o
 If the assignment was unsuccessful, it will continue searching.
 
 ```go
-hasChanged := traveller.Set(val, traveller.MustPath("**.password"), "<hidden>")
+hasChanged := traveller.Set(val, traveller.MustPath("**.password", false), "<hidden>")
 ```
 
 ```go
-hasChanged := traveller.SetBy(val, traveller.MustPath("**.password"), func(oldVal string) {
+hasChanged := traveller.SetBy(val, traveller.MustPath("**.password", false), func(oldVal string) {
 	return MyHash(oldVal)
 })
 ```
@@ -155,7 +155,7 @@ traveller.GetAll[string](val, []traveller.Matcher{traveller.MatchExact{Value: "s
 There are several options that allows manipulation of the traversal behaviour.
 
 ```go
-traveller.GetAll[string](val, traveller.MustPath("something.**.some*"),
+traveller.GetAll[string](val, traveller.MustPath("something.**.some*", false),
 	traveller.WithIgnoreMaps(true),
 	traveller.WithNoFlatEmbeds(true),
 	// ...
