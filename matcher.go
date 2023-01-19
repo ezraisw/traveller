@@ -12,6 +12,9 @@ type Matcher interface {
 	//
 	// Call MatcherSegment.Next to continue traversal using the next path segment or
 	// MatcherSegment.Stay to keep using the current path segment for a new value.
+	//
+	// Match MUST NOT modify the value as it may be overwritten by traversal handlers.
+	// In addition, its only purpose is to match for the traversal.
 	Match(reflect.Value, MatcherSegment) (keepSearching bool)
 }
 
@@ -198,6 +201,9 @@ func (m MatchPattern) matchArray(rv reflect.Value, s MatcherSegment) bool {
 
 // Recursive free matcher.
 type MatchMulti struct {
+	// Whether to always explore using earlier path segments first.
+	// This causes traversal order to change but not necessarily the found values.
+	StayFirst bool
 }
 
 // Compile-time implementation check.
@@ -215,13 +221,30 @@ func (m MatchMulti) Match(rv reflect.Value, s MatcherSegment) bool {
 	return true
 }
 
+// Needs to be separated so the matcher gets the field value twice.
+// Do not use the same reflect.Value.
+
+func (m MatchMulti) op1(childRv reflect.Value, rv reflect.Value, key any, s MatcherSegment) bool {
+	if m.StayFirst {
+		return s.Stay(childRv, rv, key)
+	}
+	return s.Next(childRv, rv, key)
+}
+
+func (m MatchMulti) op2(childRv reflect.Value, rv reflect.Value, key any, s MatcherSegment) bool {
+	if m.StayFirst {
+		return s.Next(childRv, rv, key)
+	}
+	return s.Stay(childRv, rv, key)
+}
+
 func (m MatchMulti) matchStruct(rv reflect.Value, s MatcherSegment) bool {
 	if s.Traveller().IgnoreStruct() {
 		return true
 	}
 	for i := 0; i < rv.NumField(); i++ {
-		if field, fieldRv := rv.Type().Field(i), rv.Field(i); field.IsExported() &&
-			(!s.Stay(fieldRv, rv, field.Name) || !s.Next(fieldRv, rv, field.Name)) {
+		if field := rv.Type().Field(i); field.IsExported() &&
+			(!m.op1(rv.Field(i), rv, field.Name, s) || !m.op2(rv.Field(i), rv, field.Name, s)) {
 			return false
 		}
 	}
@@ -232,8 +255,8 @@ func (m MatchMulti) matchMap(rv reflect.Value, s MatcherSegment) bool {
 	if s.Traveller().IgnoreMap() {
 		return true
 	}
-	for it := rv.MapRange(); it.Next(); {
-		if keyRv, valueRv := it.Key(), it.Value(); !s.Stay(valueRv, rv, keyRv) || !s.Next(valueRv, rv, keyRv) {
+	for _, keyRv := range rv.MapKeys() {
+		if !m.op1(rv.MapIndex(keyRv), rv, keyRv, s) || !m.op2(rv.MapIndex(keyRv), rv, keyRv, s) {
 			return false
 		}
 	}
@@ -245,7 +268,7 @@ func (m MatchMulti) matchArray(rv reflect.Value, s MatcherSegment) bool {
 		return true
 	}
 	for i := 0; i < rv.Len(); i++ {
-		if elRv := rv.Index(i); !s.Stay(elRv, rv, i) || !s.Next(elRv, rv, i) {
+		if !m.op1(rv.Index(i), rv, i, s) || !m.op2(rv.Index(i), rv, i, s) {
 			return false
 		}
 	}

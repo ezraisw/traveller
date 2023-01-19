@@ -226,17 +226,21 @@ func handleInaddrVals(t Traversal) bool {
 		newRv.Set(hackRv.Elem())
 	}
 
-	switch parentRv := t.ParentRV(); parentRv.Kind() {
-	case reflect.Struct:
-		fieldName := t.Key().(string)
-		parentRv.FieldByName(fieldName).Set(newRv)
-	case reflect.Map:
-		keyRv := t.Key().(reflect.Value)
-		parentRv.SetMapIndex(keyRv, newRv)
-	case reflect.Array, reflect.Slice:
-		i := t.Key().(int)
-		parentRv.Index(i).Set(newRv)
-	}
+	setForParent(t.ParentRV(), t.Key(), newRv)
 
 	return keepSearching
+}
+
+func setForParent(parentRv reflect.Value, key any, newRv reflect.Value) {
+	switch parentRv.Kind() {
+	case reflect.Struct:
+		fieldName := key.(string)
+		parentRv.FieldByName(fieldName).Set(newRv)
+	case reflect.Map:
+		keyRv := key.(reflect.Value)
+		parentRv.SetMapIndex(keyRv, newRv)
+	case reflect.Array, reflect.Slice:
+		i := key.(int)
+		parentRv.Index(i).Set(newRv)
+	}
 }

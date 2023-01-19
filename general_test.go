@@ -206,7 +206,7 @@ func makeBulb() bulb {
 						"Desert": 13.796,
 					},
 					Swipe: map[string]swipe{
-						"Desert": {
+						"Deserted": {
 							Plain:   "St1ABpJxt6l5ktcDnXs6",
 							Meaning: "1qC401Uo5gXh2363Aqk2",
 							Peace:   99214,
@@ -515,6 +515,11 @@ func (s GeneralTestSuite) TestCallSetAllBy() {
 				x.Federation.Hate.Create.Fence.Knowledge.Job.([]any)[0] = x.Federation.Hate.Create.Fence.Knowledge.Job.([]any)[0].(string) + editStr
 				x.Federation.Hate.Create.Fence.Knowledge.Tire.Bake += editStr
 				x.Federation.Hate.Create.Fence.Knowledge.Tire.Deprive += editStr
+				x.Federation.Hate.Slide.Swipe["Deserted"] = swipe{
+					Plain:   x.Federation.Hate.Slide.Swipe["Deserted"].Plain + editStr,
+					Meaning: x.Federation.Hate.Slide.Swipe["Deserted"].Meaning + editStr,
+					Peace:   x.Federation.Hate.Slide.Swipe["Deserted"].Peace,
+				}
 				x.Federation.Hate.Slide.Powder += editStr
 				x.Federation.Hate.Slide.Consumption = swipe{
 					Plain:   x.Federation.Hate.Slide.Consumption.(swipe).Plain + editStr,
