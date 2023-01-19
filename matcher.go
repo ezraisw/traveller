@@ -97,11 +97,6 @@ type MatchPattern struct {
 	// The string pattern to use. Uses wildcard pattern.
 	Pattern string
 
-	// Extra options.
-	Options MatchPatternOptions
-}
-
-type MatchPatternOptions struct {
 	// Only try to match keys that are a type of string.
 	// If false, attempt to convert non string keys into a string.
 	OnlyStringKey bool
@@ -135,7 +130,7 @@ func (m MatchPattern) matchStruct(rv reflect.Value, s MatcherSegment) bool {
 		if !field.IsExported() {
 			continue
 		}
-		if !wild.Match(m.Pattern, field.Name, m.Options.CaseInsensitive) {
+		if !wild.Match(m.Pattern, field.Name, m.CaseInsensitive) {
 			continue
 		}
 		fieldRv := rv.Field(i)
@@ -161,7 +156,7 @@ func (m MatchPattern) matchMap(rv reflect.Value, s MatcherSegment) bool {
 			keyStr string
 			ok     bool
 		)
-		if m.Options.OnlyStringKey {
+		if m.OnlyStringKey {
 			if keyRv.Kind() == reflect.String {
 				keyStr, ok = keyRv.String(), true
 			}
@@ -169,7 +164,7 @@ func (m MatchPattern) matchMap(rv reflect.Value, s MatcherSegment) bool {
 			keyStr, ok = AssumeAsString(keyRv)
 		}
 
-		if !ok || !wild.Match(m.Pattern, keyStr, m.Options.CaseInsensitive) {
+		if !ok || !wild.Match(m.Pattern, keyStr, m.CaseInsensitive) {
 			continue
 		}
 		if !s.Next(it.Value(), rv, keyRv) {
@@ -185,11 +180,11 @@ func (m MatchPattern) matchArray(rv reflect.Value, s MatcherSegment) bool {
 	}
 	for i := 0; i < rv.Len(); i++ {
 		// Array indexes are ints, therefore it is inevitable when OnlyStringKey is active.
-		if m.Options.OnlyStringKey {
+		if m.OnlyStringKey {
 			continue
 		}
 		// Force index as string.
-		if !wild.Match(m.Pattern, strconv.Itoa(i), m.Options.CaseInsensitive) {
+		if !wild.Match(m.Pattern, strconv.Itoa(i), m.CaseInsensitive) {
 			continue
 		}
 		if !s.Next(rv.Index(i), rv, i) {

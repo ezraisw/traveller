@@ -48,16 +48,16 @@ func Path(ps string, caseInsensitive bool) ([]Matcher, error) {
 				matchers = append(matchers, MatchExact{Value: token})
 			} else {
 				matchers = append(matchers, MatchPattern{
-					Pattern: token,
-					Options: MatchPatternOptions{CaseInsensitive: caseInsensitive},
+					Pattern:         token,
+					CaseInsensitive: caseInsensitive,
 				})
 			}
 		} else if isMultiMatchToken(token) {
 			matchers = append(matchers, MatchMulti{})
 		} else if !isInvalidToken(token) {
 			matchers = append(matchers, MatchPattern{
-				Pattern: token,
-				Options: MatchPatternOptions{CaseInsensitive: caseInsensitive},
+				Pattern:         token,
+				CaseInsensitive: caseInsensitive,
 			})
 		} else {
 			return nil, ErrInvalidPath

@@ -36,10 +36,10 @@ func (s PathTestSuite) TestCallP() {
 
 func (s PathTestSuite) TestCallPCI() {
 	expectedMp := []traveller.Matcher{
-		traveller.MatchPattern{Pattern: "something", Options: traveller.MatchPatternOptions{CaseInsensitive: true}},
+		traveller.MatchPattern{Pattern: "something", CaseInsensitive: true},
 		traveller.MatchMulti{},
-		traveller.MatchPattern{Pattern: "something", Options: traveller.MatchPatternOptions{CaseInsensitive: true}},
-		traveller.MatchPattern{Pattern: "so*th*ing", Options: traveller.MatchPatternOptions{CaseInsensitive: true}},
+		traveller.MatchPattern{Pattern: "something", CaseInsensitive: true},
+		traveller.MatchPattern{Pattern: "so*th*ing", CaseInsensitive: true},
 	}
 	mp := traveller.PCI("something.**.something.so*th*ing")
 	s.Equal(expectedMp, mp)
@@ -105,12 +105,12 @@ func (s PathTestSuite) TestCallPath() {
 		{
 			in:              "something",
 			caseInsensitive: true,
-			expected:        []traveller.Matcher{traveller.MatchPattern{Pattern: "something", Options: traveller.MatchPatternOptions{CaseInsensitive: true}}},
+			expected:        []traveller.Matcher{traveller.MatchPattern{Pattern: "something", CaseInsensitive: true}},
 		},
 		{
 			in:              "some*",
 			caseInsensitive: true,
-			expected:        []traveller.Matcher{traveller.MatchPattern{Pattern: "some*", Options: traveller.MatchPatternOptions{CaseInsensitive: true}}},
+			expected:        []traveller.Matcher{traveller.MatchPattern{Pattern: "some*", CaseInsensitive: true}},
 		},
 		{
 			in:              "**",
@@ -130,12 +130,12 @@ func (s PathTestSuite) TestCallPath() {
 		{
 			in:              "nested1.**.*nest*",
 			caseInsensitive: true,
-			expected:        []traveller.Matcher{traveller.MatchPattern{Pattern: "nested1", Options: traveller.MatchPatternOptions{CaseInsensitive: true}}, traveller.MatchMulti{}, traveller.MatchPattern{Pattern: "*nest*", Options: traveller.MatchPatternOptions{CaseInsensitive: true}}},
+			expected:        []traveller.Matcher{traveller.MatchPattern{Pattern: "nested1", CaseInsensitive: true}, traveller.MatchMulti{}, traveller.MatchPattern{Pattern: "*nest*", CaseInsensitive: true}},
 		},
 		{
 			in:              "nested1\\.*nest*",
 			caseInsensitive: true,
-			expected:        []traveller.Matcher{traveller.MatchPattern{Pattern: "nested1.*nest*", Options: traveller.MatchPatternOptions{CaseInsensitive: true}}},
+			expected:        []traveller.Matcher{traveller.MatchPattern{Pattern: "nested1.*nest*", CaseInsensitive: true}},
 		},
 	}
 
