@@ -96,7 +96,7 @@ password := traveller.MustGet[string](val, traveller.P("**.password"))
 ## Setting
 
 ### Multiple Values
-`traveller.SetAll` and `traveller.SetAllBy` will attempt to set all matching values.
+`traveller.SetAll` and `traveller.SetAllBy[T]` will attempt to set all matching values.
 
 If the type is unassignable to that type, then the attempt will be ignored.
 
@@ -111,7 +111,7 @@ changeCount := traveller.SetAllBy(val, traveller.P("**.password"), func(oldVal a
 ```
 
 ### Single Value
-`traveller.Set` and `traveller.SetBy` will attempt to set the **first successful matching** value.
+`traveller.Set` and `traveller.SetBy[T]` will attempt to set the **first successful matching** value.
 
 If the assignment was unsuccessful, it will continue searching.
 
