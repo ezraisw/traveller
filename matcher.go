@@ -54,12 +54,11 @@ func (m MatchExact) matchStruct(rv reflect.Value, s MatcherSegment) bool {
 			if !field.IsExported() {
 				continue
 			}
-			fieldRv := rv.Field(i)
-			if field.Name == name && !s.Next(fieldRv, rv, name) {
+			if field.Name == name && !s.Next(rv.Field(i), rv, name) {
 				return false
 			}
 			// Check embedded values.
-			if !s.Traveller().NoFlatEmbeds() && field.Anonymous && !s.Stay(fieldRv, rv, name) {
+			if !s.Traveller().NoFlatEmbeds() && field.Anonymous && !s.Stay(rv.Field(i), rv, name) {
 				return false
 			}
 		}
