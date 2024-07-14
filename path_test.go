@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pwnedgod/traveller"
+	"github.com/ezraisw/traveller"
 	"github.com/stretchr/testify/suite"
 )
 

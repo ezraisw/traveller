@@ -1,4 +1,4 @@
-module github.com/pwnedgod/traveller
+module github.com/ezraisw/traveller
 
 go 1.18
 
